@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Hanil Stars</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:radial-gradient(circle at 50% 20%,#2c3550,#151924 70%);color:#fff;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px}
+.title{font-size:clamp(40px,8vw,72px);font-weight:900;font-style:italic;color:#ffcc33;letter-spacing:1px;text-shadow:0 4px 0 #b3711b,0 10px 24px rgba(0,0,0,.5)}
+.charbox{display:flex;align-items:center;gap:14px}
+.arrow{width:48px;height:48px;border-radius:50%;font-size:18px;padding:0;background:#3d4660;color:#fff}
+.chcard{width:240px;background:#262c3b;border-radius:18px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;border:3px solid rgba(255,255,255,.85);text-shadow:0 2px 0 rgba(0,0,0,.35);flex-shrink:0}
+.chname{font-size:22px;font-weight:800}
+.chrole{font-size:13px;color:#ffcc33}
+.stats{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:4px}
+.stats span{font-size:12px;background:#11141c;padding:4px 8px;border-radius:8px;color:#ccd}
+.owned{font-size:12px;color:#889}
+.maps{display:flex;gap:12px}
+.map{width:150px;padding:14px;border-radius:14px;background:#262c3b;border:3px solid transparent;cursor:pointer;text-align:center}
+.map b{display:block;font-size:16px}
+.map small{font-size:12px;color:#aab}
+.map.sel{border-color:#ffcc33}
+.map.off{opacity:.45;cursor:default}
+input{padding:12px;border-radius:10px;border:none;font-size:16px;background:#11141c;color:#fff;width:100%}
+#name{width:min(320px,90vw);text-align:center}
+button{padding:12px;border-radius:10px;border:none;font-size:16px;font-weight:700;cursor:pointer;background:#ffcc33;color:#222}
+button:disabled{opacity:.5;cursor:default}
+button.sub{background:#3d4660;color:#fff}
+.big{width:min(320px,90vw);font-size:22px;padding:16px;border-radius:14px;box-shadow:0 5px 0 #b3711b}
+.msg{font-size:13px;color:#ff8a8a;min-height:18px;text-align:center}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:20}
+.card{background:#262c3b;padding:26px;border-radius:16px;width:min(360px,90vw);display:flex;flex-direction:column;gap:12px}
+.card h2{text-align:center;font-size:20px}
+.row{display:flex;gap:8px}
+.row>*{flex:1;min-width:0}
+.code{font-size:44px;font-weight:900;letter-spacing:6px;color:#ffcc33}
+.plist{display:flex;flex-direction:column;gap:8px;width:min(360px,90vw)}
+.prow{display:flex;align-items:center;gap:12px;background:#262c3b;padding:8px 12px;border-radius:12px;font-weight:700}
+.prow small{color:#aab;font-weight:400}
+#game{position:fixed;inset:0;display:none;align-items:center;justify-content:center}
+canvas{display:block;touch-action:none;border-radius:8px}
+#hud{position:fixed;top:8px;left:8px;font-size:14px;background:rgba(0,0,0,.5);padding:8px 12px;border-radius:10px;line-height:1.6;pointer-events:none;white-space:pre}
+#leave{position:fixed;top:8px;right:8px;padding:8px 14px;font-size:14px}
+#help{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font-size:12px;color:#ccd;background:rgba(0,0,0,.45);padding:6px 12px;border-radius:8px;pointer-events:none;white-space:nowrap}
+.over{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(10,12,20,.75);z-index:10}
+.over h2{font-size:30px;color:#ffcc33}
+.introGrid{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;max-width:90vw}
+.introCard{width:130px;background:#262c3b;border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:800}
+.introCard small{color:#ffcc33;font-weight:600}
+.count{font-size:80px;font-weight:900;color:#fff;text-shadow:0 6px 20px rgba(0,0,0,.6)}
+#dead{background:rgba(10,12,20,.35);pointer-events:none}
+.deadbox{text-align:center;background:rgba(0,0,0,.6);padding:20px 30px;border-radius:16px}
+.deadbox .bigt{font-size:40px;font-weight:900;color:#ff5d5d}
+.deadbox .rk{font-size:24px;font-weight:800}
+.deadbox .sm{font-size:13px;color:#ccd;margin-top:6px}
+.rrow{display:flex;align-items:center;gap:12px;background:#262c3b;padding:8px 14px;border-radius:12px;width:min(380px,90vw);font-weight:700}
+.rrow.me{outline:3px solid #ffcc33}
+.rrow .rank{width:44px;font-size:20px;font-weight:900;color:#ffcc33}
+.rrow .nm{flex:1}
+.rrow small{color:#aab;font-weight:400}
+</style>
+</head>
+<body>
+<div id="main" class="screen">
+  <div class="title">Hanil Stars</div>
+  <div class="charbox">
+    <button id="prevCh" class="arrow">◀</button>
+    <div id="chCard" class="chcard"></div>
+    <button id="nextCh" class="arrow">▶</button>
+  </div>
+  <div class="maps">
+    <div class="map sel" data-map="showdown"><b>솔로 쇼다운</b><small>최후의 1인이 승리</small></div>
+    <div class="map off" data-map="hanilball"><b>한일볼</b><small>준비 중</small></div>
+  </div>
+  <input id="name" maxlength="8" placeholder="닉네임 (8자까지)">
+  <button id="startBtn" class="big">시작하기</button>
+  <div id="msg" class="msg"></div>
+</div>
+
+<div id="roomPanel" class="modal">
+  <div class="card">
+    <h2>방 선택</h2>
+    <button id="create">방 만들기</button>
+    <div class="row">
+      <input id="code" maxlength="4" inputmode="numeric" placeholder="방 코드 4자리">
+      <button id="join" class="sub">입장</button>
+    </div>
+    <button id="backBtn" class="sub">뒤로</button>
+    <div id="msg2" class="msg"></div>
+  </div>
+</div>
+
+<div id="wait" class="screen">
+  <div style="color:#aab">방 코드</div>
+  <div id="waitCode" class="code"></div>
+  <div id="waitMap" style="font-weight:800"></div>
+  <div id="waitCount" style="color:#aab"></div>
+  <div id="waitList" class="plist"></div>
+  <button id="hostBtn" class="big">게임 시작</button>
+  <div id="waitMsg" style="color:#aab"></div>
+  <button id="waitLeave" class="sub">나가기</button>
+</div>
+
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div id="hud"></div>
+  <button id="leave" class="sub">나가기</button>
+  <div id="help">이동: WASD/방향키 · 조준: 마우스 · 발사: 클릭/스페이스 · 터치: 왼쪽 드래그 이동, 오른쪽 탭 발사</div>
+  <div id="intro" class="over">
+    <h2>솔로 쇼다운</h2>
+    <div id="introGrid" class="introGrid"></div>
+    <div id="introCount" class="count">3</div>
+  </div>
+  <div id="dead" class="over"></div>
+  <div id="result" class="over">
+    <h2 id="resultTitle">게임 종료</h2>
+    <div id="resultList" class="plist"></div>
+    <button id="resultLeave" class="big">나가기</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, set, update, remove, push, get, onValue, onChildAdded, onDisconnect, increment, serverTimestamp, query, orderByChild, startAt } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBq0XmuqW1_B7I3p3xsbgJRDl2YJxtAqTM",
+  authDomain: "hanil-stars.firebaseapp.com",
+  projectId: "hanil-stars",
+  storageBucket: "hanil-stars.firebasestorage.app",
+  messagingSenderId: "542255631068",
+  appId: "1:542255631068:web:f84e846bbf19bc8bccc219",
+  measurementId: "G-5CRCRCL6B6",
+  databaseURL: "https://hanil-stars-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+const W = 960, H = 600, R = 18, BR = 6, MAXP = 6, POISON_TIME = 240;
+const WALLS = [[200,120,40,160],[720,320,40,160],[430,270,100,40],[100,420,160,40],[700,140,160,40],[460,40,40,110],[460,450,40,110]];
+const SPAWNS = [[60,60],[900,540],[900,60],[60,540],[60,300],[900,300]];
+const CHARS = {
+  leo: { name: "레오", role: "밸런스", color: "#4fa3ff", letter: "L", hp: 3200, dmg: 800, range: 480, bspeed: 700, speed: 220, reload: 0.8, ammo: 3, pellets: 1, spread: 0 },
+  gom: { name: "곰돌", role: "탱커 · 산탄", color: "#ff8a3d", letter: "G", hp: 4800, dmg: 420, range: 300, bspeed: 650, speed: 205, reload: 1.0, ammo: 3, pellets: 3, spread: 0.22 },
+  pin: { name: "핀", role: "저격수", color: "#3ddc84", letter: "P", hp: 2400, dmg: 1400, range: 650, bspeed: 950, speed: 230, reload: 1.3, ammo: 3, pellets: 1, spread: 0 }
+};
+const CH_IDS = Object.keys(CHARS);
+const MAPS = { showdown: { name: "솔로 쇼다운" }, hanilball: { name: "한일볼", off: true } };
+
+const $ = id => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d");
+cv.width = W; cv.height = H;
+
+let app, auth, db;
+let uid = null, code = null, myName = "", myRef = null, leaving = false, phase = "main", offset = 0;
+let selCh = "leo", selMap = "showdown";
+let info = null, roster = {}, others = {}, known = {}, gone = {};
+let me = { x: 60, y: 60, a: 0, hp: 3200, alive: true }, myKills = 0, myDeathAt = 0, myRank = 0, startCount = 0;
+let ammo = 3, cool = 0, flash = 0, gasT = 0;
+let bullets = [], keys = {}, mouseAim = null, joy = null, lastSent = "", sendT = 0, hudT = 0, last = 0, looping = false;
+
+function msg(t, id) { $(id || "msg").textContent = t; }
+function esc(s) { return String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])); }
+function avatar(chId, size) {
+  const c = CHARS[chId] || CHARS.leo;
+  return `<div class="av" style="width:${size}px;height:${size}px;background:${c.color};font-size:${Math.round(size * 0.45)}px">${c.letter}</div>`;
+}
+function showScreen(id) { for (const s of ["main", "wait", "game"]) $(s).style.display = s === id ? "flex" : "none"; }
+
+if (firebaseConfig.apiKey.includes("붙여")) {
+  msg("코드 안의 firebaseConfig를 먼저 채워 주세요");
+  $("startBtn").disabled = true;
+} else {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getDatabase(app);
+  onValue(ref(db, ".info/serverTimeOffset"), s => { offset = s.val() || 0; });
+}
+
+try {
+  $("name").value = localStorage.getItem("brawlName") || "";
+  const sc = localStorage.getItem("brawlChar");
+  if (sc && CHARS[sc]) selCh = sc;
+} catch (e) {}
+
+const now = () => Date.now() + offset;
+
+function renderChar() {
+  const c = CHARS[selCh];
+  $("chCard").innerHTML = avatar(selCh, 96) +
+    `<div class="chname">${c.name}</div><div class="chrole">${c.role}</div>` +
+    `<div class="stats"><span>체력 ${c.hp}</span><span>공격 ${c.dmg}${c.pellets > 1 ? " ×" + c.pellets : ""}</span><span>사거리 ${Math.round(c.range / 60)}칸</span></div>` +
+    `<div class="owned">보유 캐릭터 ${CH_IDS.indexOf(selCh) + 1} / ${CH_IDS.length}</div>`;
+  try { localStorage.setItem("brawlChar", selCh); } catch (e) {}
+}
+$("prevCh").onclick = () => { selCh = CH_IDS[(CH_IDS.indexOf(selCh) + CH_IDS.length - 1) % CH_IDS.length]; renderChar(); };
+$("nextCh").onclick = () => { selCh = CH_IDS[(CH_IDS.indexOf(selCh) + 1) % CH_IDS.length]; renderChar(); };
+document.querySelectorAll(".map").forEach(el => {
+  el.onclick = () => {
+    if (el.classList.contains("off")) { msg("한일볼은 아직 준비 중이에요"); return; }
+    document.querySelectorAll(".map").forEach(m => m.classList.remove("sel"));
+    el.classList.add("sel");
+    selMap = el.dataset.map;
+    msg("");
+  };
+});
+renderChar();
+showScreen("main");
+
+async function ensureAuth() {
+  if (!auth.currentUser) await signInAnonymously(auth);
+  uid = auth.currentUser.uid;
+}
+
+function readName() {
+  const n = $("name").value.trim();
+  if (!n) { msg("닉네임을 입력해 주세요"); return false; }
+  myName = n.slice(0, 8);
+  try { localStorage.setItem("brawlName", myName); } catch (e) {}
+  return true;
+}
+
+function lockButtons(v) { $("create").disabled = v; $("join").disabled = v; }
+
+$("startBtn").onclick = () => {
+  if (!readName()) return;
+  msg("");
+  msg("", "msg2");
+  $("roomPanel").style.display = "flex";
+};
+$("backBtn").onclick = () => { $("roomPanel").style.display = "none"; };
+
+$("create").onclick = async () => {
+  lockButtons(true); msg("방 만드는 중...", "msg2");
+  try {
+    await ensureAuth();
+    for (let i = 0; i < 8; i++) {
+      const c = String(Math.floor(1000 + Math.random() * 9000));
+      const s = await get(ref(db, `rooms/${c}/players`));
+      if (!s.exists()) { code = c; break; }
+    }
+    if (!code) throw new Error("방 코드를 못 만들었어요");
+    await set(ref(db, `rooms/${code}/info`), { map: selMap, state: "wait", startAt: 0 });
+    await enterRoom();
+  } catch (e) { msg("오류: " + e.message, "msg2"); lockButtons(false); code = null; }
+};
+
+$("join").onclick = async () => {
+  const c = $("code").value.trim();
+  if (!/^\d{4}$/.test(c)) return msg("방 코드 4자리를 입력해 주세요", "msg2");
+  lockButtons(true); msg("입장 중...", "msg2");
+  try {
+    await ensureAuth();
+    const [ps, inf] = await Promise.all([get(ref(db, `rooms/${c}/players`)), get(ref(db, `rooms/${c}/info`))]);
+    if (!ps.exists()) { msg("그런 방이 없어요", "msg2"); lockButtons(false); return; }
+    if (!inf.exists() || inf.val().state !== "wait") { msg("이미 게임이 시작된 방이에요", "msg2"); lockButtons(false); return; }
+    if (Object.keys(ps.val()).length >= MAXP) { msg("방이 꽉 찼어요", "msg2"); lockButtons(false); return; }
+    code = c;
+    await enterRoom();
+  } catch (e) { msg("오류: " + e.message, "msg2"); lockButtons(false); }
+};
+
+$("code").addEventListener("keydown", e => { if (e.key === "Enter") $("join").click(); });
+
+function myData() {
+  return { name: myName, ch: selCh, x: Math.round(me.x), y: Math.round(me.y), a: +me.a.toFixed(2), hp: me.hp, alive: me.alive, kills: myKills, deathAt: myDeathAt, joinedAt: serverTimestamp() };
+}
+
+async function enterRoom() {
+  myRef = ref(db, `rooms/${code}/players/${uid}`);
+  const c = CHARS[selCh];
+  me = { x: 60, y: 60, a: 0, hp: c.hp, alive: true };
+  await set(myRef, myData());
+  onDisconnect(myRef).remove();
+  phase = "wait";
+  onValue(ref(db, `rooms/${code}/players`), onPlayers);
+  onValue(ref(db, `rooms/${code}/info`), s => {
+    info = s.val();
+    if (phase === "wait") {
+      renderWait();
+      if (info && info.state === "play") beginIntro();
+    }
+  });
+  $("roomPanel").style.display = "none";
+  showScreen("wait");
+  renderWait();
+}
+
+function onPlayers(s) {
+  const v = s.val() || {};
+  if (!v[uid] && !leaving && phase !== "over") { set(myRef, myData()); onDisconnect(myRef).remove(); }
+  if (phase !== "wait") {
+    for (const id in known) {
+      if (id === uid || v[id] || gone[id]) continue;
+      const p = roster[id] || known[id];
+      gone[id] = { name: p.name, ch: p.ch, kills: p.kills || 0, deathAt: p.alive === false ? (p.deathAt || 0) : now() };
+    }
+  }
+  roster = {};
+  for (const id in v) if (v[id].name) roster[id] = v[id];
+  for (const id in others) if (!roster[id]) delete others[id];
+  for (const id in roster) {
+    const p = roster[id];
+    if (id === uid) { myKills = p.kills || 0; continue; }
+    const o = others[id];
+    if (!o) others[id] = { ...p, dx: p.x, dy: p.y, kills: p.kills || 0 };
+    else Object.assign(o, { name: p.name, ch: p.ch, x: p.x, y: p.y, a: p.a, hp: p.hp, alive: p.alive, kills: p.kills || 0, deathAt: p.deathAt || 0 });
+  }
+  if (phase === "wait") renderWait();
+}
+
+function sortedIds() {
+  const ids = Object.keys(roster);
+  if (!ids.includes(uid)) ids.push(uid);
+  return ids.sort((a, b) => ((roster[a] && roster[a].joinedAt) || 0) - ((roster[b] && roster[b].joinedAt) || 0) || (a < b ? -1 : 1));
+}
+
+function renderWait() {
+  const ids = sortedIds();
+  const host = ids[0];
+  $("waitCode").textContent = code;
+  $("waitMap").textContent = MAPS[(info && info.map) || "showdown"].name;
+  $("waitCount").textContent = `${ids.length} / ${MAXP}명`;
+  $("waitList").innerHTML = ids.map(id => {
+    const p = id === uid ? { name: myName, ch: selCh } : roster[id];
+    if (!p) return "";
+    return `<div class="prow">${avatar(p.ch, 40)}<div style="flex:1">${esc(p.name)}${id === uid ? " <small>(나)</small>" : ""}</div>${id === host ? "👑" : ""}</div>`;
+  }).join("");
+  const isHost = host === uid;
+  $("hostBtn").style.display = isHost ? "block" : "none";
+  $("hostBtn").textContent = `게임 시작 (${ids.length}명)`;
+  $("waitMsg").textContent = isHost ? "친구들이 다 들어오면 시작을 눌러 주세요" : "방장이 시작하길 기다리는 중...";
+}
+
+$("hostBtn").onclick = async () => {
+  if (phase !== "wait") return;
+  $("hostBtn").disabled = true;
+  try { await update(ref(db, `rooms/${code}/info`), { state: "play", startAt: now() + 3500 }); }
+  catch (e) { $("waitMsg").textContent = "오류: " + e.message; $("hostBtn").disabled = false; }
+};
+
+function beginIntro() {
+  phase = "intro";
+  const ids = sortedIds();
+  known = {};
+  for (const id of ids) known[id] = id === uid ? { name: myName, ch: selCh } : { ...roster[id] };
+  startCount = ids.length;
+  ids.forEach((id, i) => {
+    const sp = SPAWNS[i % SPAWNS.length];
+    if (id === uid) {
+      const c = CHARS[selCh];
+      me = { x: sp[0], y: sp[1], a: 0, hp: c.hp, alive: true };
+      ammo = c.ammo; myDeathAt = 0;
+    } else if (others[id]) {
+      Object.assign(others[id], { x: sp[0], y: sp[1], dx: sp[0], dy: sp[1], alive: true, hp: (CHARS[others[id].ch] || CHARS.leo).hp });
+    }
+  });
+  update(myRef, { x: Math.round(me.x), y: Math.round(me.y), hp: me.hp, alive: true, deathAt: 0 });
+  $("introGrid").innerHTML = ids.map(id => {
+    const p = known[id];
+    const c = CHARS[p.ch] || CHARS.leo;
+    return `<div class="introCard">${avatar(p.ch, 72)}<div>${esc(p.name)}</div><small>${c.name}</small></div>`;
+  }).join("");
+  const shotsQ = query(ref(db, `rooms/${code}/shots`), orderByChild("t"), startAt(now() - 500));
+  onChildAdded(shotsQ, s => {
+    const b = s.val();
+    if (!b || b.uid === uid) return;
+    const late = Math.max(0, Math.min(0.25, (now() - b.t) / 1000));
+    spawnShot(b.x, b.y, b.a, b.uid, b.c, late);
+  });
+  showScreen("game");
+  $("intro").style.display = "flex";
+  resize();
+  if (!looping) { looping = true; requestAnimationFrame(loop); }
+}
+
+async function leaveRoom() {
+  leaving = true;
+  try { if (myRef) await remove(myRef); } catch (e) {}
+  location.reload();
+}
+$("leave").onclick = leaveRoom;
+$("waitLeave").onclick = leaveRoom;
+$("resultLeave").onclick = leaveRoom;
+
+function resize() {
+  const s = Math.min(innerWidth / W, innerHeight / H);
+  cv.style.width = W * s + "px";
+  cv.style.height = H * s + "px";
+}
+addEventListener("resize", resize);
+
+function toWorld(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+}
+
+function circleRect(x, y, r, w) {
+  const cx = Math.max(w[0], Math.min(x, w[0] + w[2]));
+  const cy = Math.max(w[1], Math.min(y, w[1] + w[3]));
+  return (x - cx) ** 2 + (y - cy) ** 2 < r * r;
+}
+
+function hitsWall(x, y, r) {
+  if (x < r || y < r || x > W - r || y > H - r) return true;
+  for (const w of WALLS) if (circleRect(x, y, r, w)) return true;
+  return false;
+}
+
+function gameTime() {
+  if (!info || !info.startAt || phase === "intro") return 0;
+  return Math.max(0, (now() - info.startAt) / 1000);
+}
+
+function safeRect() {
+  const p = Math.min(1, gameTime() / POISON_TIME);
+  const ix = p * W / 2, iy = p * H / 2;
+  return [ix, iy, W - ix, H - iy];
+}
+
+function spawnShot(x, y, a, owner, chId, late) {
+  const c = CHARS[chId] || CHARS.leo;
+  for (let i = 0; i < c.pellets; i++) {
+    const ang = a + (i - (c.pellets - 1) / 2) * c.spread;
+    const dx = Math.cos(ang), dy = Math.sin(ang), adv = c.bspeed * late;
+    bullets.push({ x: x + dx * adv, y: y + dy * adv, dx, dy, dist: adv, owner, range: c.range, speed: c.bspeed, dmg: c.dmg, color: c.color });
+  }
+}
+
+function shoot() {
+  if (phase !== "play" || !me.alive || ammo < 1 || cool > 0) return;
+  ammo -= 1; cool = 0.25;
+  const x = me.x + Math.cos(me.a) * (R + 4), y = me.y + Math.sin(me.a) * (R + 4);
+  spawnShot(x, y, me.a, uid, selCh, 0);
+  const r = push(ref(db, `rooms/${code}/shots`), { uid, x: Math.round(x), y: Math.round(y), a: +me.a.toFixed(3), c: selCh, t: serverTimestamp() });
+  setTimeout(() => remove(r), 1500);
+}
+
+function hurt(amount, owner) {
+  if (!me.alive || phase !== "play") return;
+  me.hp = Math.max(0, Math.round(me.hp - amount));
+  flash = 0.15;
+  if (me.hp <= 0) die(owner);
+  else update(myRef, { hp: me.hp });
+}
+
+function die(owner) {
+  me.alive = false; me.hp = 0; myDeathAt = now();
+  let aliveOthers = 0;
+  for (const id in others) if (others[id].alive !== false) aliveOthers++;
+  myRank = aliveOthers + 1;
+  update(myRef, { hp: 0, alive: false, deathAt: serverTimestamp() });
+  if (owner && others[owner]) update(ref(db, `rooms/${code}/players/${owner}`), { kills: increment(1) });
+  $("dead").innerHTML = `<div class="deadbox"><div class="bigt">탈락!</div><div class="rk">${myRank}위</div><div class="sm">게임이 끝날 때까지 관전 중...</div></div>`;
+  $("dead").style.display = "flex";
+}
+
+function ranking() {
+  const list = [];
+  for (const id in known) {
+    if (id === uid) list.push({ id, name: myName, ch: selCh, alive: me.alive, deathAt: myDeathAt, kills: myKills });
+    else if (others[id]) { const o = others[id]; list.push({ id, name: o.name, ch: o.ch, alive: o.alive !== false, deathAt: o.deathAt || 0, kills: o.kills || 0 }); }
+    else if (gone[id]) list.push({ id, ...gone[id], alive: false });
+    else list.push({ id, name: known[id].name, ch: known[id].ch, alive: false, deathAt: 0, kills: 0 });
+  }
+  list.sort((a, b) => (b.alive - a.alive) || (b.deathAt - a.deathAt));
+  return list;
+}
+
+function endGame() {
+  phase = "over";
+  const list = ranking();
+  const mine = list.findIndex(p => p.id === uid) + 1;
+  $("resultTitle").textContent = mine === 1 ? "🏆 1위! 승리!" : `게임 종료 · ${mine}위`;
+  $("resultList").innerHTML = list.map((p, i) => {
+    const c = CHARS[p.ch] || CHARS.leo;
+    return `<div class="rrow${p.id === uid ? " me" : ""}"><div class="rank">${i + 1}위</div>${avatar(p.ch, 40)}<div class="nm">${esc(p.name)}<br><small>${c.name} · 처치 ${p.kills}</small></div></div>`;
+  }).join("");
+  $("dead").style.display = "none";
+  $("result").style.display = "flex";
+}
+
+addEventListener("keydown", e => {
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code) && phase === "play") e.preventDefault();
+  keys[e.code] = true;
+  if (e.code === "Space" && !e.repeat) shoot();
+});
+addEventListener("keyup", e => { keys[e.code] = false; });
+addEventListener("blur", () => { keys = {}; });
+
+cv.addEventListener("pointerdown", e => {
+  const p = toWorld(e);
+  if (e.pointerType === "mouse") {
+    mouseAim = p;
+    if (e.button === 0) { if (phase === "play" && me.alive) me.a = Math.atan2(p.y - me.y, p.x - me.x); shoot(); }
+    return;
+  }
+  if (p.x < W / 2 && !joy) {
+    joy = { id: e.pointerId, sx: p.x, sy: p.y, x: p.x, y: p.y };
+    cv.setPointerCapture(e.pointerId);
+  } else {
+    if (phase === "play" && me.alive) me.a = Math.atan2(p.y - me.y, p.x - me.x);
+    shoot();
+  }
+});
+cv.addEventListener("pointermove", e => {
+  const p = toWorld(e);
+  if (e.pointerType === "mouse") { mouseAim = p; return; }
+  if (joy && e.pointerId === joy.id) { joy.x = p.x; joy.y = p.y; }
+});
+const endJoy = e => { if (joy && e.pointerId === joy.id) joy = null; };
+cv.addEventListener("pointerup", endJoy);
+cv.addEventListener("pointercancel", endJoy);
+cv.addEventListener("contextmenu", e => e.preventDefault());
+
+function aliveCount() {
+  let n = me.alive ? 1 : 0;
+  for (const id in others) if (others[id].alive !== false) n++;
+  return n;
+}
+
+function step(dt) {
+  if (phase === "intro") {
+    const left = info && info.startAt ? (info.startAt - now()) / 1000 : 3;
+    $("introCount").textContent = Math.max(1, Math.ceil(left));
+    if (left <= 0) { phase = "play"; $("intro").style.display = "none"; }
+    return;
+  }
+  if (phase !== "play" && phase !== "over") return;
+  const c = CHARS[selCh];
+
+  if (phase === "play" && me.alive) {
+    let mx = 0, my = 0;
+    if (keys.KeyA || keys.ArrowLeft) mx -= 1;
+    if (keys.KeyD || keys.ArrowRight) mx += 1;
+    if (keys.KeyW || keys.ArrowUp) my -= 1;
+    if (keys.KeyS || keys.ArrowDown) my += 1;
+    if (joy) {
+      const jx = joy.x - joy.sx, jy = joy.y - joy.sy, jl = Math.hypot(jx, jy);
+      if (jl > 8) { mx = jx / Math.max(jl, 60); my = jy / Math.max(jl, 60); }
+    }
+    const ml = Math.hypot(mx, my);
+    if (ml > 1) { mx /= ml; my /= ml; }
+    const nx = me.x + mx * c.speed * dt;
+    if (!hitsWall(nx, me.y, R)) me.x = nx;
+    const ny = me.y + my * c.speed * dt;
+    if (!hitsWall(me.x, ny, R)) me.y = ny;
+    if (mouseAim) me.a = Math.atan2(mouseAim.y - me.y, mouseAim.x - me.x);
+    else if (ml > 0.1) me.a = Math.atan2(my, mx);
+
+    if (ammo < c.ammo) ammo = Math.min(c.ammo, ammo + dt / c.reload);
+    cool = Math.max(0, cool - dt);
+
+    const s = safeRect();
+    if (me.x < s[0] || me.x > s[2] || me.y < s[1] || me.y > s[3]) {
+      gasT += dt;
+      if (gasT >= 1) { gasT -= 1; hurt(c.hp / 6, null); }
+    } else gasT = 0;
+  }
+  flash = Math.max(0, flash - dt);
+
+  for (const b of bullets) {
+    for (let k = 0; k < 2 && !b.dead; k++) {
+      const d = b.speed * dt / 2;
+      b.x += b.dx * d; b.y += b.dy * d; b.dist += d;
+      if (b.dist > b.range || hitsWall(b.x, b.y, 1)) { b.dead = true; break; }
+      if (b.owner !== uid && me.alive && phase === "play" && Math.hypot(b.x - me.x, b.y - me.y) < R + BR) {
+        b.dead = true; hurt(b.dmg, b.owner); break;
+      }
+      for (const id in others) {
+        const o = others[id];
+        if (id === b.owner || o.alive === false) continue;
+        if (Math.hypot(b.x - o.dx, b.y - o.dy) < R + BR) { b.dead = true; break; }
+      }
+    }
+  }
+  bullets = bullets.filter(b => !b.dead);
+
+  const k = Math.min(1, dt * 12);
+  for (const id in others) {
+    const o = others[id];
+    if (Math.hypot(o.x - o.dx, o.y - o.dy) > 200) { o.dx = o.x; o.dy = o.y; }
+    o.dx += (o.x - o.dx) * k;
+    o.dy += (o.y - o.dy) * k;
+  }
+
+  if (phase === "play" && me.alive) {
+    sendT += dt;
+    if (sendT >= 0.08) {
+      sendT = 0;
+      const s = `${Math.round(me.x)},${Math.round(me.y)},${me.a.toFixed(2)}`;
+      if (s !== lastSent) {
+        lastSent = s;
+        update(myRef, { x: Math.round(me.x), y: Math.round(me.y), a: +me.a.toFixed(2) });
+      }
+    }
+  }
+
+  if (phase === "play") {
+    const n = aliveCount();
+    if ((startCount >= 2 && n <= 1) || n === 0) endGame();
+  }
+
+  hudT += dt;
+  if (hudT > 0.25) {
+    hudT = 0;
+    const remain = Math.max(0, Math.ceil(POISON_TIME - gameTime()));
+    const mm = Math.floor(remain / 60), ss = String(remain % 60).padStart(2, "0");
+    $("hud").textContent = `솔로 쇼다운 · 방 ${code}\n남은 인원 ${aliveCount()}명\n독구름 완성까지 ${mm}:${ss}\n내 처치 ${myKills}`;
+  }
+}
+
+function drawPlayer(x, y, a, chId, name, hp, isMe) {
+  const c = CHARS[chId] || CHARS.leo;
+  ctx.fillStyle = "rgba(0,0,0,.25)";
+  ctx.beginPath(); ctx.ellipse(x, y + R - 2, R, R * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#222"; ctx.lineWidth = c.pellets > 1 ? 11 : 8; ctx.lineCap = "round";
+  const gl = c.range > 600 ? R + 18 : R + 12;
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * gl, y + Math.sin(a) * gl); ctx.stroke();
+  ctx.fillStyle = isMe && flash > 0 ? "#fff" : c.color;
+  ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = isMe ? "#fff" : "#222"; ctx.stroke();
+  ctx.fillStyle = "#fff"; ctx.font = "bold 16px system-ui,sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(c.letter, x, y + 1);
+  ctx.textBaseline = "alphabetic";
+  ctx.font = "bold 13px system-ui,sans-serif";
+  ctx.fillText(name, x, y - R - 16);
+  ctx.fillStyle = "#222"; ctx.fillRect(x - 24, y - R - 12, 48, 7);
+  ctx.fillStyle = isMe ? "#3ddc84" : "#ff5d5d"; ctx.fillRect(x - 24, y - R - 12, 48 * Math.max(0, hp) / c.hp, 7);
+}
+
+function draw() {
+  ctx.fillStyle = "#5c8a4a"; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = "rgba(255,255,255,.06)"; ctx.lineWidth = 1;
+  for (let x = 0; x <= W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  for (const w of WALLS) {
+    ctx.fillStyle = "#3a4656"; ctx.fillRect(w[0], w[1], w[2], w[3]);
+    ctx.fillStyle = "#56677d"; ctx.fillRect(w[0], w[1], w[2], 6);
+  }
+  for (const b of bullets) {
+    ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, BR, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+  }
+  for (const id in others) {
+    const o = others[id];
+    if (o.alive === false) continue;
+    drawPlayer(o.dx, o.dy, o.a || 0, o.ch, o.name, o.hp, false);
+  }
+  if (me.alive) drawPlayer(me.x, me.y, me.a, selCh, myName, me.hp, true);
+
+  const s = safeRect();
+  if (s[0] > 0.5) {
+    ctx.fillStyle = "rgba(110,220,90,.42)";
+    ctx.fillRect(0, 0, W, s[1]);
+    ctx.fillRect(0, s[3], W, H - s[3]);
+    ctx.fillRect(0, s[1], s[0], s[3] - s[1]);
+    ctx.fillRect(s[2], s[1], W - s[2], s[3] - s[1]);
+    ctx.strokeStyle = "rgba(60,160,40,.9)"; ctx.lineWidth = 3;
+    ctx.strokeRect(s[0], s[1], s[2] - s[0], s[3] - s[1]);
+  }
+
+  if (me.alive && phase === "play") {
+    const c = CHARS[selCh];
+    const bw = Math.floor(48 / c.ammo);
+    for (let i = 0; i < c.ammo; i++) {
+      const f = Math.max(0, Math.min(1, ammo - i));
+      ctx.fillStyle = "#222"; ctx.fillRect(me.x - 24 + i * bw, me.y + R + 6, bw - 2, 5);
+      ctx.fillStyle = f >= 1 ? "#ffcc33" : "#8a7a3a"; ctx.fillRect(me.x - 24 + i * bw, me.y + R + 6, (bw - 2) * f, 5);
+    }
+  }
+
+  if (joy) {
+    ctx.globalAlpha = 0.35; ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(joy.sx, joy.sy, 60, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.7;
+    const jx = joy.x - joy.sx, jy = joy.y - joy.sy, jl = Math.hypot(jx, jy), lim = Math.min(jl, 60) / (jl || 1);
+    ctx.beginPath(); ctx.arc(joy.sx + jx * lim, joy.sy + jy * lim, 26, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+function loop(ts) {
+  const dt = last ? Math.min(0.05, (ts - last) / 1000) : 0;
+  last = ts;
+  step(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
